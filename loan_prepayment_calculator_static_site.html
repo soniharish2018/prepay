@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Prepayment Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white shadow-2xl rounded-3xl p-8 w-full max-w-2xl">
+    <h1 class="text-3xl font-bold mb-6 text-center">Loan Prepayment Calculator</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Loan Amount (₹)</label>
+        <input id="loanAmount" type="number" value="3689222" class="w-full border rounded-xl px-4 py-3" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Interest Rate (%)</label>
+        <input id="interestRate" type="number" step="0.01" value="7.65" class="w-full border rounded-xl px-4 py-3" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Monthly EMI (₹)</label>
+        <input id="emi" type="number" value="52140" class="w-full border rounded-xl px-4 py-3" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Prepayment Amount (₹)</label>
+        <input id="prepayment" type="number" value="400000" class="w-full border rounded-xl px-4 py-3" />
+      </div>
+    </div>
+
+    <button onclick="calculateLoan()" class="w-full mt-6 bg-black text-white py-3 rounded-2xl text-lg font-semibold hover:opacity-90 transition">
+      Calculate
+    </button>
+
+    <div id="results" class="mt-8 hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-50 p-5 rounded-2xl">
+          <p class="text-sm text-gray-500">Original Tenure</p>
+          <h2 id="originalTenure" class="text-2xl font-bold mt-1"></h2>
+        </div>
+
+        <div class="bg-gray-50 p-5 rounded-2xl">
+          <p class="text-sm text-gray-500">New Tenure</p>
+          <h2 id="newTenure" class="text-2xl font-bold mt-1"></h2>
+        </div>
+
+        <div class="bg-gray-50 p-5 rounded-2xl">
+          <p class="text-sm text-gray-500">Months Saved</p>
+          <h2 id="monthsSaved" class="text-2xl font-bold mt-1"></h2>
+        </div>
+
+        <div class="bg-gray-50 p-5 rounded-2xl">
+          <p class="text-sm text-gray-500">Interest Saved</p>
+          <h2 id="interestSaved" class="text-2xl font-bold mt-1"></h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateTenure(principal, emi, annualRate) {
+      const monthlyRate = annualRate / 12 / 100;
+
+      const months = -Math.log(1 - (monthlyRate * principal) / emi) /
+        Math.log(1 + monthlyRate);
+
+      return Math.ceil(months);
+    }
+
+    function totalPayment(emi, months) {
+      return emi * months;
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0,
+      }).format(value);
+    }
+
+    function calculateLoan() {
+      const loanAmount = parseFloat(document.getElementById('loanAmount').value);
+      const interestRate = parseFloat(document.getElementById('interestRate').value);
+      const emi = parseFloat(document.getElementById('emi').value);
+      const prepayment = parseFloat(document.getElementById('prepayment').value);
+
+      const originalMonths = calculateTenure(loanAmount, emi, interestRate);
+
+      const remainingPrincipal = loanAmount - prepayment;
+
+      const newMonths = calculateTenure(remainingPrincipal, emi, interestRate);
+
+      const originalInterest = totalPayment(emi, originalMonths) - loanAmount;
+      const newInterest = totalPayment(emi, newMonths) - remainingPrincipal;
+
+      const interestSaved = originalInterest - newInterest;
+      const monthsSaved = originalMonths - newMonths;
+
+      document.getElementById('originalTenure').innerText = `${originalMonths} months`;
+      document.getElementById('newTenure').innerText = `${newMonths} months`;
+      document.getElementById('monthsSaved').innerText = `${monthsSaved} months`;
+      document.getElementById('interestSaved').innerText = formatCurrency(interestSaved);
+
+      document.getElementById('results').classList.remove('hidden');
+    }
+
+    calculateLoan();
+  </script>
+</body>
+</html>
