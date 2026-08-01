@@ -1,115 +1,553 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Loan Prepayment Calculator</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Loan Prepayment Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12262B;
+    --ink-soft:#43595E;
+    --muted:#7C8E92;
+    --paper:#EEF1EE;
+    --surface:#FFFFFF;
+    --line:#D8DFDC;
+    --teal:#0F6E63;
+    --teal-soft:#DCEDE9;
+    --marigold:#E2A32D;
+    --marigold-soft:#FBEFD6;
+    --plum:#6B4E8C;
+    --plum-soft:#EDE6F5;
+    --ghost:#C6D0CE;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(18,38,43,.05), 0 12px 32px -20px rgba(18,38,43,.35);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:16px;line-height:1.55;padding:28px 18px 72px;
+  }
+  .wrap{max-width:880px;margin:0 auto}
+
+  .eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:clamp(34px,7vw,52px);
+    line-height:1.02;letter-spacing:-.01em;margin:0 0 12px}
+  h1 em{font-style:italic;color:var(--teal)}
+  .thesis{max-width:52ch;color:var(--ink-soft);margin:0 0 30px;font-size:15.5px}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;margin-bottom:22px}
+  .card h2{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.15em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 18px}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  label{display:block;font-size:13px;font-weight:500;margin-bottom:6px}
+  .hint{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:3px}
+  .field{position:relative}
+  .field .unit{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);
+    font-family:"IBM Plex Mono",monospace;font-size:14px;pointer-events:none}
+  .field .unit.suffix{left:auto;right:14px}
+  input[type=number]{width:100%;padding:12px 14px 12px 32px;border:1px solid var(--line);
+    border-radius:10px;background:#FBFCFB;font-family:"IBM Plex Mono",ui-monospace,monospace;
+    font-size:16px;color:var(--ink);transition:border-color .15s, box-shadow .15s;-moz-appearance:textfield}
+  input.pct{padding-left:14px;padding-right:32px}
+  input[type=number]:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+  .choice{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+  .segmented{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .segmented input{position:absolute;opacity:0;width:0;height:0}
+  .segmented label{margin:0;cursor:pointer;padding:9px 14px;border:1px solid var(--line);
+    border-radius:999px;font-size:13.5px;font-weight:500;background:#FBFCFB;transition:.15s}
+  .segmented input:checked + label{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .segmented.strategy input#sTenure:checked + label{background:var(--marigold);border-color:var(--marigold);color:#3D2A05}
+  .segmented.strategy input#sEmi:checked + label{background:var(--plum);border-color:var(--plum);color:#fff}
+  .segmented input:focus-visible + label{outline:2px solid var(--teal);outline-offset:2px}
+
+  .headline{background:var(--ink);color:#fff;border:none;display:grid;
+    grid-template-columns:1fr 1fr;gap:6px 28px}
+  @media(max-width:560px){.headline{grid-template-columns:1fr;gap:18px}}
+  .stat .k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:#8FA8A5;margin:0 0 6px}
+  .stat .v{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:clamp(26px,6vw,36px);
+    line-height:1;letter-spacing:-.02em}
+  .stat .v.gold{color:var(--marigold)}
+  .stat .v.plum{color:#C3A5E6}
+  .stat .sub{font-size:13px;color:#9DB3B0;margin-top:8px}
+  .verdict{grid-column:1/-1;border-top:1px solid #2C444A;margin-top:16px;padding-top:14px;
+    font-size:13.5px;color:#B9CBC8}
+  .verdict strong{color:#fff}
+
+  .strip-row{margin-bottom:20px;padding:10px 12px;border-radius:10px;border:1px solid transparent;transition:.15s}
+  .strip-row.active{border-color:var(--line);background:#FAFBFA}
+  .strip-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+  .strip-title{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .pill{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    padding:2px 7px;border-radius:999px;background:var(--ink);color:#fff}
+  .strip-meta{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);text-align:right}
+  .strip{display:flex;align-items:flex-end;gap:1px;height:56px;border-bottom:1px solid var(--line);position:relative}
+  .tick{flex:1 1 0;min-width:2px;border-radius:1px 1px 0 0;background:var(--ghost)}
+  .tick.paid{background:var(--teal)}
+  .tick.stub{background:var(--marigold)}
+  .tick.lighter{background:var(--plum)}
+  .tick.saved{background:repeating-linear-gradient(45deg,var(--ghost),var(--ghost) 2px,transparent 2px,transparent 4px)}
+  .prepay-mark{position:absolute;top:-6px;bottom:0;width:2px;background:var(--ink)}
+  .prepay-mark::after{content:"\20B9";position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink)}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--ink-soft);margin-top:6px}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+
+  .tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+  .tbl th,.tbl td{padding:13px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  .tbl th:first-child,.tbl td:first-child{text-align:left}
+  .tbl thead th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;padding-bottom:9px}
+  .tbl td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  .tbl tr.sel-tenure td{background:var(--marigold-soft)}
+  .tbl tr.sel-tenure td:first-child{border-left:3px solid var(--marigold);font-weight:600}
+  .tbl tr.sel-emi td{background:var(--plum-soft)}
+  .tbl tr.sel-emi td:first-child{border-left:3px solid var(--plum);font-weight:600}
+  .tbl tbody tr:last-child td{border-bottom:none}
+  .rowlabel small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .delta{margin-top:16px;font-size:14px;color:var(--ink-soft)}
+  .delta strong{color:var(--ink)}
+
+  .note{background:var(--teal-soft);border:1px solid #C2DED8;border-radius:var(--radius);
+    padding:18px 20px;font-size:14.5px;color:#0C4C45;margin-bottom:22px}
+  .note p{margin:0 0 10px}
+  .note p:last-child{margin-bottom:0}
+  .note strong{color:#083B36}
+  .prose p{margin:0 0 12px;font-size:14.8px;color:var(--ink-soft)}
+  .prose p:last-child{margin-bottom:0}
+  .prose strong{color:var(--ink)}
+  .formula{font-family:"IBM Plex Mono",monospace;font-size:13px;background:#F5F7F5;
+    border-left:2px solid var(--line);padding:10px 14px;border-radius:0 6px 6px 0;
+    color:var(--ink-soft);overflow-x:auto;white-space:pre}
+  details summary{cursor:pointer;font-size:13.5px;font-weight:500;color:var(--teal);list-style:none;padding:4px 0}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"\25B8  "}
+  details[open] summary::before{content:"\25BE  "}
+  details[open] summary{margin-bottom:14px}
+  .sched{font-size:13px}
+  .sched td,.sched th{padding:7px 8px}
+  .sched-wrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .sched thead th{position:sticky;top:0;background:var(--surface);box-shadow:0 1px 0 var(--line)}
+  tr.prepay-row td{background:var(--marigold-soft);font-weight:600;color:#7A5407}
+  .error{background:#FDECEC;border:1px solid #F3C6C6;color:#8C2020;border-radius:var(--radius);
+    padding:16px 18px;font-size:14.5px;margin-bottom:22px}
+  .hidden{display:none}
+  footer{font-size:12.5px;color:var(--muted);max-width:62ch;margin-top:26px}
+  footer p{margin:0 0 8px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-  <div class="bg-white shadow-2xl rounded-3xl p-8 w-full max-w-2xl">
-    <h1 class="text-3xl font-bold mb-6 text-center">Loan Prepayment Calculator</h1>
+<body>
+<div class="wrap">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <p class="eyebrow">Reducing balance &middot; monthly rest</p>
+  <h1>Where your loan <em>actually</em> ends.</h1>
+  <p class="thesis">The last instalment is almost never a full EMI &mdash; it's a stub. Most calculators multiply the EMI by the number of months and call the difference your savings, which quietly overstates it. This one runs the schedule month by month and counts the stub.</p>
+
+  <section class="card">
+    <h2>Your loan</h2>
+    <div class="grid">
       <div>
-        <label class="block text-sm font-medium mb-1">Loan Amount (₹)</label>
-        <input id="loanAmount" type="number" value="3689222" class="w-full border rounded-xl px-4 py-3" />
+        <label for="loanAmount">Outstanding principal
+          <span class="hint">The balance today, not the sanctioned amount</span></label>
+        <div class="field"><span class="unit">&#8377;</span>
+          <input id="loanAmount" type="number" value="3050226" min="1" step="1" /></div>
       </div>
-
       <div>
-        <label class="block text-sm font-medium mb-1">Interest Rate (%)</label>
-        <input id="interestRate" type="number" step="0.01" value="7.65" class="w-full border rounded-xl px-4 py-3" />
+        <label for="interestRate">Interest rate
+          <span class="hint">Per annum, compounded monthly</span></label>
+        <div class="field"><span class="unit suffix">%</span>
+          <input id="interestRate" class="pct" type="number" value="7.65" step="0.01" min="0.01" /></div>
       </div>
-
       <div>
-        <label class="block text-sm font-medium mb-1">Monthly EMI (₹)</label>
-        <input id="emi" type="number" value="52140" class="w-full border rounded-xl px-4 py-3" />
+        <label for="emi">Monthly EMI
+          <span class="hint">Full instalment, principal + interest</span></label>
+        <div class="field"><span class="unit">&#8377;</span>
+          <input id="emi" type="number" value="52140" min="1" step="1" /></div>
       </div>
-
       <div>
-        <label class="block text-sm font-medium mb-1">Prepayment Amount (₹)</label>
-        <input id="prepayment" type="number" value="400000" class="w-full border rounded-xl px-4 py-3" />
+        <label for="prepayment">Prepayment
+          <span class="hint">One-off lump sum toward principal</span></label>
+        <div class="field"><span class="unit">&#8377;</span>
+          <input id="prepayment" type="number" value="400000" min="0" step="1" /></div>
       </div>
     </div>
 
-    <button onclick="calculateLoan()" class="w-full mt-6 bg-black text-white py-3 rounded-2xl text-lg font-semibold hover:opacity-90 transition">
-      Calculate
-    </button>
-
-    <div id="results" class="mt-8 hidden">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-gray-50 p-5 rounded-2xl">
-          <p class="text-sm text-gray-500">Original Tenure</p>
-          <h2 id="originalTenure" class="text-2xl font-bold mt-1"></h2>
-        </div>
-
-        <div class="bg-gray-50 p-5 rounded-2xl">
-          <p class="text-sm text-gray-500">New Tenure</p>
-          <h2 id="newTenure" class="text-2xl font-bold mt-1"></h2>
-        </div>
-
-        <div class="bg-gray-50 p-5 rounded-2xl">
-          <p class="text-sm text-gray-500">Months Saved</p>
-          <h2 id="monthsSaved" class="text-2xl font-bold mt-1"></h2>
-        </div>
-
-        <div class="bg-gray-50 p-5 rounded-2xl">
-          <p class="text-sm text-gray-500">Interest Saved</p>
-          <h2 id="interestSaved" class="text-2xl font-bold mt-1"></h2>
-        </div>
+    <div class="choice">
+      <label>After the prepayment, keep the EMI or keep the end date?</label>
+      <div class="segmented strategy" role="radiogroup" aria-label="What the prepayment changes">
+        <input type="radio" name="strategy" id="sTenure" value="tenure" checked><label for="sTenure">Reduce the tenure</label>
+        <input type="radio" name="strategy" id="sEmi" value="emi"><label for="sEmi">Reduce the EMI</label>
       </div>
     </div>
+
+    <div class="choice">
+      <label>When does the lump sum go in?</label>
+      <div class="segmented" role="radiogroup" aria-label="Prepayment timing">
+        <input type="radio" name="timing" id="t0" value="0" checked><label for="t0">Now, before the next EMI</label>
+        <input type="radio" name="timing" id="t1" value="1"><label for="t1">After the next EMI</label>
+      </div>
+    </div>
+  </section>
+
+  <div id="error" class="error hidden"></div>
+
+  <div id="results">
+    <section class="card headline">
+      <div class="stat">
+        <p class="k">Interest saved</p>
+        <div class="v gold" id="hInterest">&mdash;</div>
+        <p class="sub" id="hInterestSub"></p>
+      </div>
+      <div class="stat">
+        <p class="k" id="hSecondK">Loan closes early by</p>
+        <div class="v" id="hSecond">&mdash;</div>
+        <p class="sub" id="hSecondSub"></p>
+      </div>
+      <p class="verdict" id="verdict"></p>
+    </section>
+
+    <section class="card">
+      <h2>Every instalment, to scale</h2>
+      <div class="strip-row" id="rowBase">
+        <div class="strip-head">
+          <span class="strip-title">Carry on as is</span>
+          <span class="strip-meta" id="stripBaseMeta"></span>
+        </div>
+        <div class="strip" id="stripBase"></div>
+      </div>
+      <div class="strip-row" id="rowTenure">
+        <div class="strip-head">
+          <span class="strip-title">Reduce the tenure <span class="pill hidden" id="pillTenure">Showing</span></span>
+          <span class="strip-meta" id="stripTenureMeta"></span>
+        </div>
+        <div class="strip" id="stripTenure"></div>
+      </div>
+      <div class="strip-row" id="rowEmi">
+        <div class="strip-head">
+          <span class="strip-title">Reduce the EMI <span class="pill hidden" id="pillEmi">Showing</span></span>
+          <span class="strip-meta" id="stripEmiMeta"></span>
+        </div>
+        <div class="strip" id="stripEmi"></div>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--teal)"></i> Full EMI</span>
+        <span><i class="sw" style="background:var(--plum)"></i> Reduced EMI</span>
+        <span><i class="sw" style="background:var(--marigold)"></i> Final part-payment</span>
+        <span><i class="sw" style="background:var(--ghost)"></i> Months you no longer pay</span>
+        <span><i class="sw" style="background:var(--ink)"></i> Lump sum goes in here</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Side by side</h2>
+      <div class="scroll">
+        <table class="tbl">
+          <thead>
+            <tr><th>Option</th><th>EMI</th><th>Months</th><th>Interest paid</th><th>Interest saved</th></tr>
+          </thead>
+          <tbody id="cmpBody"></tbody>
+        </table>
+      </div>
+      <p class="delta" id="deltaLine"></p>
+    </section>
+
+    <div class="note">
+      <p><strong>Ask for tenure reduction in writing.</strong> After a prepayment, a lender can either keep your EMI and shorten the loan, or keep the loan length and shrink your EMI. The money involved is not close, and several lenders default to the second unless you specify otherwise.</p>
+      <p id="tenureExplain"></p>
+      <p>Reducing the EMI frees up cash every month, which is a real benefit if the budget is tight. But it keeps the balance earning interest for the full original term, and that is where the difference goes.</p>
+    </div>
+
+    <section class="card prose">
+      <h2>Paying now vs. after the next EMI</h2>
+      <p id="timingText"></p>
+      <div class="formula" id="timingMath"></div>
+    </section>
+
+    <section class="card prose">
+      <h2>Why this differs from other calculators</h2>
+      <p>The common shortcut is <span style="font-family:'IBM Plex Mono',monospace">months saved &times; EMI &minus; prepayment</span>, which assumes both schedules end on a full instalment. They don't &mdash; each ends on a stub, and the two stubs aren't the same size.</p>
+      <div class="formula" id="naiveMath"></div>
+      <p id="naiveText"></p>
+      <details>
+        <summary>Show the month-by-month schedule</summary>
+        <div class="sched-wrap">
+          <table class="tbl sched">
+            <thead><tr><th>#</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead>
+            <tbody id="schedBody"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
   </div>
 
-  <script>
-    function calculateTenure(principal, emi, annualRate) {
-      const monthlyRate = annualRate / 12 / 100;
+  <footer>
+    <p>Assumes a fixed rate and monthly rest, with interest charged on the opening balance each month. A floating rate will move your tenure as it revises.</p>
+    <p>Floating-rate home loans to individual borrowers in India carry no prepayment penalty under RBI rules; fixed-rate and non-housing loans often do. Check your sanction letter before transferring anything.</p>
+  </footer>
+</div>
 
-      const months = -Math.log(1 - (monthlyRate * principal) / emi) /
-        Math.log(1 + monthlyRate);
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var inr = function(v){ return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(v); };
+  var num = function(v){ return new Intl.NumberFormat('en-IN',{maximumFractionDigits:0}).format(Math.round(v)); };
 
-      return Math.ceil(months);
+  /* EMI that clears a balance in exactly n months */
+  function emiFor(P, r, n){
+    var f = Math.pow(1 + r, n);
+    return P * r * f / (f - 1);
+  }
+
+  /* Real month-by-month schedule.
+     mode 'tenure' keeps the EMI fixed; mode 'emi' re-solves the EMI at the
+     prepayment point so the loan still ends on the original month. */
+  function amortize(principal, emi, r, opts){
+    opts = opts || {};
+    var pre = opts.prepay || 0, when = opts.prepayAfter || 0;
+    var mode = opts.mode || 'tenure', target = opts.targetMonths || 0;
+    var bal = principal, ti = 0, tp = 0, cur = emi, n = 0, guard = 0, rows = [];
+
+    function applyPrepay(){
+      var cut = Math.min(pre, bal);
+      bal -= cut; tp += cut;
+      if(mode === 'emi' && bal > 0){
+        cur = emiFor(bal, r, Math.max(1, target - n));
+      }
+      rows.push({prepay:true, pay:cut, bal:bal, newEmi:cur});
     }
 
-    function totalPayment(emi, months) {
-      return emi * months;
+    if(pre > 0 && when === 0) applyPrepay();
+    while(bal > 0.005 && guard++ < 1200){
+      var interest = bal * r;
+      var pay = Math.min(cur, bal + interest);
+      bal = bal + interest - pay;
+      if(bal < 0.005) bal = 0;
+      ti += interest; tp += pay; n++;
+      rows.push({n:n, pay:pay, interest:interest, princ:pay - interest, bal:bal, full: pay >= cur - 0.5});
+      if(pre > 0 && n === when && bal > 0) applyPrepay();
+    }
+    var pays = rows.filter(function(x){ return !x.prepay; });
+    return {
+      months:n, totalInterest:ti, totalPaid:tp, rows:rows,
+      finalPay: pays.length ? pays[pays.length-1].pay : 0,
+      emiAfter: cur
+    };
+  }
+
+  /* Bars are scaled against the ORIGINAL EMI, so a reduced EMI reads as
+     shorter bars across the same span. */
+  function strip(el, res, scaleEmi, prepayIndex, totalSlots, tone){
+    el.innerHTML = '';
+    var pays = res.rows.filter(function(x){ return !x.prepay; });
+    for(var i = 0; i < totalSlots; i++){
+      var d = document.createElement('div');
+      d.className = 'tick';
+      if(i < pays.length){
+        var p = pays[i];
+        d.style.height = Math.max(8, Math.round((p.pay / scaleEmi) * 100)) + '%';
+        d.classList.add(p.full ? tone : 'stub');
+        d.title = 'Month ' + (i+1) + ' \u00B7 ' + inr(p.pay);
+      } else {
+        d.style.height = '100%';
+        d.classList.add('saved');
+        d.title = 'Month ' + (i+1) + ' \u00B7 not paid';
+      }
+      el.appendChild(d);
+    }
+    if(prepayIndex !== null){
+      var m = document.createElement('div');
+      m.className = 'prepay-mark';
+      m.style.left = (prepayIndex / totalSlots * 100) + '%';
+      el.appendChild(m);
+    }
+  }
+
+  function row(cls, label, sub, emi, months, interest, saved){
+    return '<tr class="' + cls + '">' +
+      '<td class="rowlabel">' + label + (sub ? '<small>' + sub + '</small>' : '') + '</td>' +
+      '<td class="num">' + inr(emi) + '</td>' +
+      '<td class="num">' + months + '</td>' +
+      '<td class="num">' + inr(interest) + '</td>' +
+      '<td class="num">' + (saved === null ? '\u2014' : inr(saved)) + '</td></tr>';
+  }
+
+  function calculate(){
+    var P = parseFloat($('loanAmount').value);
+    var rate = parseFloat($('interestRate').value);
+    var emi = parseFloat($('emi').value);
+    var pre = parseFloat($('prepayment').value) || 0;
+    var when = parseInt(document.querySelector('input[name=timing]:checked').value, 10);
+    var strat = document.querySelector('input[name=strategy]:checked').value;
+    var err = $('error'), res = $('results');
+
+    if(!(P > 0) || !(rate > 0) || !(emi > 0)){
+      err.textContent = 'Enter a principal, a rate and an EMI above zero to see the schedule.';
+      err.classList.remove('hidden'); res.classList.add('hidden'); return;
+    }
+    var r = rate / 12 / 100;
+    if(emi <= P * r){
+      err.innerHTML = 'This EMI of ' + inr(emi) + ' is smaller than the first month\'s interest of ' +
+        inr(P * r) + ', so the balance would grow instead of clearing. Raise the EMI to at least ' +
+        inr(Math.ceil(P * r) + 1) + ' to see a schedule.';
+      err.classList.remove('hidden'); res.classList.add('hidden'); return;
+    }
+    err.classList.add('hidden'); res.classList.remove('hidden');
+
+    var base = amortize(P, emi, r, {});
+    var opt = {prepay:pre, prepayAfter:when, targetMonths:base.months};
+
+    var tenure = pre > 0 ? amortize(P, emi, r, {prepay:pre, prepayAfter:when, mode:'tenure'}) : base;
+    var emiCut = pre > 0 ? amortize(P, emi, r, {prepay:pre, prepayAfter:when, mode:'emi', targetMonths:base.months}) : base;
+
+    var savedTenure = base.totalInterest - tenure.totalInterest;
+    var savedEmiCut = base.totalInterest - emiCut.totalInterest;
+    var isTenure = strat === 'tenure';
+    var chosen = isTenure ? tenure : emiCut;
+    var savedChosen = isTenure ? savedTenure : savedEmiCut;
+    var gap = savedTenure - savedEmiCut;
+    var newEmi = emiCut.emiAfter;
+
+    /* headline */
+    $('hInterest').className = 'v ' + (isTenure ? 'gold' : 'plum');
+    $('hInterest').textContent = inr(savedChosen);
+    $('hInterestSub').textContent = 'Total interest falls from ' + inr(base.totalInterest) +
+      ' to ' + inr(chosen.totalInterest) + '.';
+
+    if(isTenure){
+      var sm = base.months - tenure.months;
+      var yrs = Math.floor(sm / 12), mos = sm % 12;
+      $('hSecondK').textContent = 'Loan closes early by';
+      $('hSecond').textContent = sm + (sm === 1 ? ' month' : ' months');
+      $('hSecondSub').textContent = (sm >= 12 ? 'About ' + yrs + (yrs === 1 ? ' year ' : ' years ') +
+        (mos ? mos + ' months ' : '') + 'off the tail. ' : '') +
+        tenure.months + ' months left instead of ' + base.months + '.';
+    } else {
+      $('hSecondK').textContent = 'Monthly EMI falls by';
+      $('hSecond').textContent = pre > 0 ? inr(emi - newEmi) : inr(0);
+      $('hSecondSub').textContent = pre > 0
+        ? 'From ' + inr(emi) + ' to ' + inr(newEmi) + ', still finishing in ' + emiCut.months + ' months.'
+        : 'Enter a prepayment to see the effect.';
     }
 
-    function formatCurrency(value) {
-      return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        maximumFractionDigits: 0,
-      }).format(value);
+    if(pre > 0){
+      $('verdict').innerHTML = isTenure
+        ? 'Cutting the tenure is the cheaper route by <strong>' + inr(gap) +
+          '</strong>. Switch above to see what reducing the EMI would cost you.'
+        : 'This route leaves <strong>' + inr(emi - newEmi) + '</strong> more in your hands each month, ' +
+          'but costs <strong>' + inr(gap) + '</strong> more in interest than cutting the tenure.';
+    } else {
+      $('verdict').textContent = 'Enter a prepayment amount to compare the two routes.';
     }
 
-    function calculateLoan() {
-      const loanAmount = parseFloat(document.getElementById('loanAmount').value);
-      const interestRate = parseFloat(document.getElementById('interestRate').value);
-      const emi = parseFloat(document.getElementById('emi').value);
-      const prepayment = parseFloat(document.getElementById('prepayment').value);
+    /* strips */
+    strip($('stripBase'), base, emi, null, base.months, 'paid');
+    strip($('stripTenure'), tenure, emi, pre > 0 ? when : null, base.months, 'paid');
+    strip($('stripEmi'), emiCut, emi, pre > 0 ? when : null, base.months, 'lighter');
+    $('stripBaseMeta').textContent = base.months + ' payments \u00B7 last one ' + inr(base.finalPay);
+    $('stripTenureMeta').textContent = tenure.months + ' payments \u00B7 last one ' + inr(tenure.finalPay);
+    $('stripEmiMeta').textContent = emiCut.months + ' payments of ' + inr(newEmi);
+    $('rowTenure').classList.toggle('active', isTenure);
+    $('rowEmi').classList.toggle('active', !isTenure);
+    $('pillTenure').classList.toggle('hidden', !isTenure);
+    $('pillEmi').classList.toggle('hidden', isTenure);
 
-      const originalMonths = calculateTenure(loanAmount, emi, interestRate);
+    /* table */
+    var html = row('', 'Carry on as is', 'No prepayment', emi, base.months, base.totalInterest, null);
+    if(pre > 0){
+      html += row(isTenure ? 'sel-tenure' : '', 'Reduce the tenure', 'EMI unchanged, loan ends sooner',
+        emi, tenure.months, tenure.totalInterest, savedTenure);
+      html += row(!isTenure ? 'sel-emi' : '', 'Reduce the EMI', 'Same end date, lighter month',
+        newEmi, emiCut.months, emiCut.totalInterest, savedEmiCut);
+    }
+    $('cmpBody').innerHTML = html;
+    $('deltaLine').innerHTML = pre > 0
+      ? 'Same ' + inr(pre) + ' either way. The choice between the two rows is worth <strong>' + inr(gap) +
+        '</strong> in interest, against <strong>' + inr(emi - newEmi) + ' a month</strong> of breathing room for ' +
+        emiCut.months + ' months.'
+      : '';
 
-      const remainingPrincipal = loanAmount - prepayment;
+    /* explainer */
+    if(pre > 0){
+      $('tenureExplain').innerHTML = 'On your numbers, cutting the tenure saves <strong>' + inr(savedTenure) +
+        '</strong> and ends the loan ' + (base.months - tenure.months) + ' months early. Cutting the EMI instead drops it to <strong>' +
+        inr(newEmi) + '</strong> a month and saves only <strong>' + inr(savedEmiCut) +
+        '</strong>. Choosing tenure reduction is worth <strong>' + inr(gap) + '</strong> to you.';
 
-      const newMonths = calculateTenure(remainingPrincipal, emi, interestRate);
+      var nowRun = amortize(P, emi, r, {prepay:pre, prepayAfter:0, mode:strat, targetMonths:base.months});
+      var latRun = amortize(P, emi, r, {prepay:pre, prepayAfter:1, mode:strat, targetMonths:base.months});
+      var tdiff = latRun.totalInterest - nowRun.totalInterest;
+      $('timingText').innerHTML = 'Holding the lump sum for one more month costs one month of interest on it, whichever route you pick. ' +
+        'On the <strong>' + (isTenure ? 'reduce the tenure' : 'reduce the EMI') + '</strong> route, paying before the next EMI saves <strong>' +
+        inr(tdiff) + '</strong> more than paying after it. If your EMI auto-debits in the next few days, this is not worth scrambling over.';
+      $('timingMath').textContent =
+        'one month on the lump sum  ' + num(pre) + ' \u00D7 ' + (r * 100).toFixed(4) + '%  = ' + num(pre * r) +
+        '\ncarried to loan closure                       \u2248 ' + num(tdiff);
 
-      const originalInterest = totalPayment(emi, originalMonths) - loanAmount;
-      const newInterest = totalPayment(emi, newMonths) - remainingPrincipal;
-
-      const interestSaved = originalInterest - newInterest;
-      const monthsSaved = originalMonths - newMonths;
-
-      document.getElementById('originalTenure').innerText = `${originalMonths} months`;
-      document.getElementById('newTenure').innerText = `${newMonths} months`;
-      document.getElementById('monthsSaved').innerText = `${monthsSaved} months`;
-      document.getElementById('interestSaved').innerText = formatCurrency(interestSaved);
-
-      document.getElementById('results').classList.remove('hidden');
+      var savedMonths = base.months - chosen.months;
+      var naive = savedMonths * emi - pre;
+      var stubGap = chosen.finalPay - base.finalPay;
+      if(isTenure){
+        $('naiveMath').textContent =
+          'shortcut  ' + savedMonths + ' \u00D7 ' + num(emi) + ' \u2212 ' + num(pre) + '  = ' + num(naive) +
+          '\nstub gap  ' + num(chosen.finalPay) + ' \u2212 ' + num(base.finalPay) + '  = ' + num(stubGap) +
+          '\nactual    ' + num(naive) + ' \u2212 ' + num(stubGap) + '  = ' + num(savedChosen);
+        $('naiveText').innerHTML = 'You skip ' + savedMonths + ' instalments, but your last payment is <strong>' +
+          inr(Math.abs(stubGap)) + (stubGap >= 0 ? ' larger' : ' smaller') +
+          '</strong> than it would have been. Netting that off gives <strong>' + inr(savedChosen) +
+          '</strong> \u2014 the figure above, and the one the schedule agrees with.';
+      } else {
+        $('naiveMath').textContent =
+          'old cost  ' + num(base.months) + ' EMIs, last one ' + num(base.finalPay) + '  = ' + num(base.totalInterest) + ' interest' +
+          '\nnew cost  ' + num(emiCut.months) + ' \u00D7 ' + num(newEmi) + ' \u2212 ' + num(P - pre) + '  = ' + num(emiCut.totalInterest) + ' interest' +
+          '\nsaved     ' + num(savedChosen);
+        $('naiveText').innerHTML = 'The tenure does not move here, so the saving comes entirely from a smaller balance ' +
+          'accruing interest over the same ' + emiCut.months + ' months \u2014 <strong>' + inr(savedChosen) +
+          '</strong>, against <strong>' + inr(savedTenure) + '</strong> on the other route.';
+      }
+    } else {
+      $('tenureExplain').textContent = 'Enter a prepayment amount to compare the two.';
+      $('timingText').textContent = 'Enter a prepayment amount to compare the timing.';
+      $('timingMath').textContent = '\u2014';
+      $('naiveMath').textContent = '\u2014';
+      $('naiveText').textContent = '';
     }
 
-    calculateLoan();
-  </script>
+    /* schedule */
+    var s = '';
+    chosen.rows.forEach(function(x){
+      if(x.prepay){
+        s += '<tr class="prepay-row"><td>\u2014</td><td class="num">' + inr(x.pay) +
+             '</td><td class="num">lump sum</td><td class="num">' + inr(x.pay) +
+             '</td><td class="num">' + inr(x.bal) + '</td></tr>';
+      } else {
+        s += '<tr><td>' + x.n + '</td><td class="num">' + inr(x.pay) + '</td><td class="num">' +
+             inr(x.interest) + '</td><td class="num">' + inr(x.princ) + '</td><td class="num">' +
+             inr(x.bal) + '</td></tr>';
+      }
+    });
+    $('schedBody').innerHTML = s;
+  }
+
+  document.querySelectorAll('input').forEach(function(el){
+    el.addEventListener('input', calculate);
+    el.addEventListener('change', calculate);
+  });
+  calculate();
+})();
+</script>
 </body>
 </html>
